@@ -9,9 +9,18 @@ import os
 excel_file = ""
 carrinho = []
 comandas = {}
+
+de1a100 = []
+for i in range(101):
+    de1a100.append(i+1)
+
+de50em100 = []
+for i in range(101):
+    de50em100.append(50*i)
+
 comanda_selecionada = None
 
-# Excel e dados 
+# Funções do Excel e dados 
 def criar_excel():
     global excel_file
     if not excel_file:
@@ -40,7 +49,7 @@ def calcular_preco(produto, quantidade):
         return round((quantidade / 1000) * 89.99, 2)
     return 0.0
 
-# Carrinho de vendas
+# Carrinho de vendas diretas
 def adicionar_ao_carrinho():
     produto = product_type_var.get()
     entrega = delivery_type_var.get()
@@ -97,8 +106,8 @@ def registrar_carrinho():
 
 def limpar_campos_venda():
     product_type_var.set("")
-    quantidade_var.set(0.0)
-    quantidade_gramas_var.set(0.0)
+    quantidade_var.set(0)
+    quantidade_gramas_var.set(0)
     delivery_type_var.set("")
 
 # Funções das comandas
@@ -198,7 +207,7 @@ def limpar_campos_comanda():
     comanda_qtd_var.set(0.0)
     comanda_gramas_var.set(0.0)
 
-# ---------- Interface gráfica ----------
+# ---------- Interface gráfica (visual melhorado) ----------
 root = tk.Tk()
 root.title("Sistema de Vendas e Comandas")
 root.option_add("*Font", "Helvetica 10")
@@ -217,11 +226,11 @@ ttk.Combobox(frame_venda, textvariable=product_type_var, values=["Combo Individu
 
 ttk.Label(frame_venda, text="Qtd Produtos").grid(row=1, column=0)
 quantidade_var = tk.DoubleVar()
-ttk.Entry(frame_venda, textvariable=quantidade_var).grid(row=1, column=1)
+ttk.Combobox(frame_venda, textvariable=quantidade_var, values= de1a100 ).grid(row=1, column=1)
 
 ttk.Label(frame_venda, text="Qtd (g)").grid(row=2, column=0)
 quantidade_gramas_var = tk.DoubleVar()
-ttk.Entry(frame_venda, textvariable=quantidade_gramas_var).grid(row=2, column=1)
+ttk.Combobox(frame_venda, textvariable=quantidade_gramas_var , values= de50em100 ).grid(row=2, column=1)
 
 ttk.Label(frame_venda, text="Entrega").grid(row=3, column=0)
 delivery_type_var = tk.StringVar()
