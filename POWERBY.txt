@@ -1,0 +1,16 @@
+import pandas as pd
+import matplotlib.pyplot as plt
+
+
+dataset['Preço'] = pd.to_numeric(dataset['Preço'], errors='coerce')
+
+
+soma_preco = dataset['Preço'].sum()
+media_preco = soma_preco.mean()
+plt.figure(figsize=(6, 4))
+plt.axis('off')
+plt.text(0.5, 0.5,
+         f'VALOR TOTAL:\nR$ {soma_preco:,.2f} \n MEDIA \n R${media_preco}',
+         ha='center', va='center', fontsize=14, weight='bold')
+plt.tight_layout()
+plt.show()
