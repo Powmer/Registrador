@@ -10,17 +10,11 @@ excel_file = ""
 carrinho = []
 comandas = {}
 
-de1a100 = []
-for i in range(101):
-    de1a100.append(i+1)
-
-de50em100 = []
-for i in range(101):
-    de50em100.append(50*i)
-
+de1a100 = [i+1 for i in range(101)]
+de50em100 = [50*i for i in range(101)]
 comanda_selecionada = None
 
-# Funções do Excel e dados 
+# Funções do Excel e dados
 def criar_excel():
     global excel_file
     if not excel_file:
@@ -39,6 +33,13 @@ def selecionar_diretorio():
         excel_file = os.path.join(pasta, "vendas.xlsx")
         criar_excel()
         messagebox.showinfo("Sucesso", f"Arquivo criado em: {excel_file}")
+
+def selecionar_arquivo_excel():
+    global excel_file
+    arquivo = filedialog.askopenfilename(title="Selecione um arquivo Excel", filetypes=[("Arquivos Excel", "*.xlsx")])
+    if arquivo:
+        excel_file = arquivo
+        messagebox.showinfo("Arquivo Carregado", f"Arquivo carregado: {excel_file}")
 
 def calcular_preco(produto, quantidade):
     if produto == "Combo Individual":
@@ -85,6 +86,9 @@ def atualizar_total_carrinho():
 
 def registrar_carrinho():
     global excel_file
+    if not excel_file:
+        messagebox.showwarning("Atenção", "Selecione ou crie um arquivo Excel antes.")
+        return
     pagamento = payment_method_var.get()
     if not pagamento:
         messagebox.showwarning("Atenção", "Informe o método de pagamento.")
@@ -182,6 +186,9 @@ def atualizar_total_comanda():
 
 def fechar_comanda():
     global excel_file
+    if not excel_file:
+        messagebox.showwarning("Atenção", "Selecione ou crie um arquivo Excel antes.")
+        return
     if not comanda_selecionada:
         messagebox.showwarning("Atenção", "Nenhuma comanda selecionada.")
         return
@@ -207,7 +214,7 @@ def limpar_campos_comanda():
     comanda_qtd_var.set(0.0)
     comanda_gramas_var.set(0.0)
 
-# ---------- Interface gráfica (visual melhorado) ----------
+# ---------- Interface gráfica ----------
 root = tk.Tk()
 root.title("Sistema de Vendas e Comandas")
 root.option_add("*Font", "Helvetica 10")
@@ -226,11 +233,11 @@ ttk.Combobox(frame_venda, textvariable=product_type_var, values=["Combo Individu
 
 ttk.Label(frame_venda, text="Qtd Produtos").grid(row=1, column=0)
 quantidade_var = tk.DoubleVar()
-ttk.Combobox(frame_venda, textvariable=quantidade_var, values= de1a100 ).grid(row=1, column=1)
+ttk.Combobox(frame_venda, textvariable=quantidade_var, values=de1a100).grid(row=1, column=1)
 
 ttk.Label(frame_venda, text="Qtd (g)").grid(row=2, column=0)
 quantidade_gramas_var = tk.DoubleVar()
-ttk.Combobox(frame_venda, textvariable=quantidade_gramas_var , values= de50em100 ).grid(row=2, column=1)
+ttk.Combobox(frame_venda, textvariable=quantidade_gramas_var, values=de50em100).grid(row=2, column=1)
 
 ttk.Label(frame_venda, text="Entrega").grid(row=3, column=0)
 delivery_type_var = tk.StringVar()
@@ -244,6 +251,7 @@ ttk.Combobox(frame_venda, textvariable=payment_method_var, values=["Pix", "Cart�
 
 ttk.Button(frame_venda, text="Finalizar Venda", command=registrar_carrinho).grid(row=6, column=0, columnspan=2, pady=5)
 ttk.Button(frame_venda, text="Selecionar Pasta", command=selecionar_diretorio).grid(row=7, column=0, columnspan=2, pady=5)
+ttk.Button(frame_venda, text="Carregar Arquivo Excel", command=selecionar_arquivo_excel).grid(row=8, column=0, columnspan=2, pady=5)
 
 # Frame Carrinho
 frame_carrinho = ttk.LabelFrame(root, text="Carrinho")
@@ -258,7 +266,7 @@ ttk.Label(frame_carrinho, text="Total:").pack()
 preco_total_carrinho_var = tk.StringVar(value="R$ 0.0")
 ttk.Label(frame_carrinho, textvariable=preco_total_carrinho_var, font=("Helvetica", 10, "bold")).pack()
 
-# Janela Comandas
+# Frame Comandas
 frame_comanda = ttk.LabelFrame(root, text="Comandas")
 frame_comanda.pack(side="right", padx=10, pady=10, fill="both")
 
