@@ -10,8 +10,8 @@ excel_file = ""
 carrinho = []
 comandas = {}
 
-de1a100 = [i+1 for i in range(101)]
-de50em100 = [50*i for i in range(101)]
+de1a100 = [i + 1 for i in range(101)]
+de50em100 = [50 * i for i in range(101)]
 comanda_selecionada = None
 
 # Funções do Excel e dados
@@ -41,6 +41,33 @@ def selecionar_arquivo_excel():
         excel_file = arquivo
         messagebox.showinfo("Arquivo Carregado", f"Arquivo carregado: {excel_file}")
 
+def abrir_planilha():
+    global excel_file
+    if not excel_file:
+        messagebox.showwarning("Atenção", "Nenhum arquivo Excel selecionado.")
+        return
+    try:
+        wb = openpyxl.load_workbook(excel_file)
+        ws = wb.active
+        janela = tk.Toplevel(root)
+        janela.title(f"Planilha: {os.path.basename(excel_file)}")
+        janela.geometry("700x400")
+        style = ttk.Style()
+        style.configure("Treeview", background="#000000", foreground="#FFA500", fieldbackground="#000000", rowheight=25)
+        tree = ttk.Treeview(janela, show="headings")
+        tree.pack(fill="both", expand=True)
+        dados = list(ws.values)
+        if not dados:
+            return
+        tree["columns"] = [str(i) for i in range(len(dados[0]))]
+        for i, col in enumerate(dados[0]):
+            tree.heading(str(i), text=col)
+            tree.column(str(i), width=100)
+        for linha in dados[1:]:
+            tree.insert("", "end", values=linha)
+    except Exception as e:
+        messagebox.showerror("Erro", f"Erro ao abrir planilha: {e}")
+
 def calcular_preco(produto, quantidade):
     if produto == "Combo Individual":
         return round(quantidade * 29.99, 2)
@@ -50,7 +77,6 @@ def calcular_preco(produto, quantidade):
         return round((quantidade / 1000) * 89.99, 2)
     return 0.0
 
-# Carrinho de vendas diretas
 def adicionar_ao_carrinho():
     produto = product_type_var.get()
     entrega = delivery_type_var.get()
@@ -58,11 +84,9 @@ def adicionar_ao_carrinho():
         quantidade = quantidade_gramas_var.get()
     else:
         quantidade = quantidade_var.get()
-
     if not produto or not entrega or quantidade <= 0:
         messagebox.showwarning("Atenção", "Preencha produto, quantidade e entrega.")
         return
-
     preco = calcular_preco(produto, quantidade)
     carrinho.append({
         "produto": produto,
@@ -96,7 +120,6 @@ def registrar_carrinho():
     if not carrinho:
         messagebox.showwarning("Atenção", "Carrinho vazio.")
         return
-
     data_hora = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     wb = openpyxl.load_workbook(excel_file)
     ws = wb.active
@@ -114,7 +137,6 @@ def limpar_campos_venda():
     quantidade_gramas_var.set(0)
     delivery_type_var.set("")
 
-# Funções das comandas
 def abrir_comanda():
     global comanda_selecionada
     nome = comanda_nome_var.get().strip()
@@ -214,16 +236,20 @@ def limpar_campos_comanda():
     comanda_qtd_var.set(0.0)
     comanda_gramas_var.set(0.0)
 
-# ---------- Interface gráfica ----------
+# Interface Gráfica
 root = tk.Tk()
 root.title("Sistema de Vendas e Comandas")
 root.option_add("*Font", "Helvetica 10")
+
+# Estilo laranja e preto
 style = ttk.Style()
 style.theme_use("clam")
-style.configure("Treeview.Heading", font=("Helvetica", 10, "bold"))
-style.configure("TButton", padding=5)
+style.configure(".", background="#000000", foreground="#FFA500", fieldbackground="#000000")
+style.configure("TButton", background="#FFA500", foreground="#000000", font=("Helvetica", 10, "bold"))
+style.configure("TLabel", background="#000000", foreground="#FFA500")
+style.configure("Treeview.Heading", background="#FFA500", foreground="#000000", font=("Helvetica", 10, "bold"))
 
-# Frame de Vendas
+# Frames e widgets
 frame_venda = ttk.LabelFrame(root, text="Venda")
 frame_venda.pack(side="left", padx=10, pady=10, fill="both")
 
@@ -244,7 +270,6 @@ delivery_type_var = tk.StringVar()
 ttk.Combobox(frame_venda, textvariable=delivery_type_var, values=["Retirada", "Entrega"]).grid(row=3, column=1)
 
 ttk.Button(frame_venda, text="Adicionar ao Carrinho", command=adicionar_ao_carrinho).grid(row=4, column=0, columnspan=2, pady=5)
-
 ttk.Label(frame_venda, text="Pagamento").grid(row=5, column=0)
 payment_method_var = tk.StringVar()
 ttk.Combobox(frame_venda, textvariable=payment_method_var, values=["Pix", "Cartão", "Dinheiro"]).grid(row=5, column=1)
@@ -252,8 +277,8 @@ ttk.Combobox(frame_venda, textvariable=payment_method_var, values=["Pix", "Cart�
 ttk.Button(frame_venda, text="Finalizar Venda", command=registrar_carrinho).grid(row=6, column=0, columnspan=2, pady=5)
 ttk.Button(frame_venda, text="Selecionar Pasta", command=selecionar_diretorio).grid(row=7, column=0, columnspan=2, pady=5)
 ttk.Button(frame_venda, text="Carregar Arquivo Excel", command=selecionar_arquivo_excel).grid(row=8, column=0, columnspan=2, pady=5)
+ttk.Button(frame_venda, text="Abrir Planilha", command=abrir_planilha).grid(row=9, column=0, columnspan=2, pady=5)
 
-# Frame Carrinho
 frame_carrinho = ttk.LabelFrame(root, text="Carrinho")
 frame_carrinho.pack(side="left", padx=10, pady=10, fill="both")
 
@@ -266,7 +291,6 @@ ttk.Label(frame_carrinho, text="Total:").pack()
 preco_total_carrinho_var = tk.StringVar(value="R$ 0.0")
 ttk.Label(frame_carrinho, textvariable=preco_total_carrinho_var, font=("Helvetica", 10, "bold")).pack()
 
-# Frame Comandas
 frame_comanda = ttk.LabelFrame(root, text="Comandas")
 frame_comanda.pack(side="right", padx=10, pady=10, fill="both")
 
@@ -293,11 +317,9 @@ comanda_gramas_var = tk.DoubleVar()
 ttk.Entry(frame_comanda, textvariable=comanda_gramas_var).grid(row=5, column=1)
 
 ttk.Button(frame_comanda, text="Adicionar Item", command=adicionar_item_comanda).grid(row=6, column=0, columnspan=2, pady=5)
-
 ttk.Label(frame_comanda, text="Pagamento").grid(row=7, column=0)
 comanda_pagamento_var = tk.StringVar()
 ttk.Combobox(frame_comanda, textvariable=comanda_pagamento_var, values=["Pix", "Cartão", "Dinheiro"]).grid(row=7, column=1)
-
 ttk.Button(frame_comanda, text="Fechar Comanda", command=fechar_comanda).grid(row=8, column=0, columnspan=2, pady=5)
 
 ttk.Label(frame_comanda, text="Comandas Abertas").grid(row=9, column=0, columnspan=2)
