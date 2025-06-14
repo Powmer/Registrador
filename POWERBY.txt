@@ -14,3 +14,23 @@ plt.text(0.5, 0.5,
          ha='center', va='center', fontsize=14, weight='bold')
 plt.tight_layout()
 plt.show()
+
+
+
+import pandas as pd
+import matplotlib.pyplot as plt
+
+combo_individual = dataset.loc[dataset['Produto'] == 'Combo Individual', 'Quantidade'].sum()
+combo_familia = dataset.loc[dataset['Produto'] == 'Combo Familia', 'Quantidade'].sum()
+
+kilo = dataset.loc[dataset['Produto'] == 'Kilo', 'Quantidade'].sum()
+
+#gráfico
+produtos = ['Combo Individual', 'Combo Familia', 'Kilo (gramas)']
+valores = [combo_individual, combo_familia, kilo]
+
+plt.figure(figsize=(7,7))
+plt.pie(valores, labels=produtos, autopct='%1.1f%%', startangle=140)
+plt.title('Participação das Vendas por Produto')
+plt.axis('equal')  # círculo perfeito
+plt.show()
