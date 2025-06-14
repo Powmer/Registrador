@@ -14,7 +14,32 @@ comandas = {}
 de1a100 = [i+1 for i in range(101)]
 de50em100 = [50*i for i in range(101)]
 comanda_selecionada = None
- 
+### EXCEL 
+def pymerger():
+    arquivos = filedialog.askopenfilenames(title="Selecione arquivos Excel", filetypes=[("Arquivos Excel", "*.xlsx")])
+    if not arquivos or len(arquivos) < 2:
+        messagebox.showwarning("Aviso", "Selecione pelo menos dois arquivos.")
+        return
+
+    try:
+        df_merged = pd.DataFrame()
+
+        for arquivo in arquivos:
+            wb = openpyxl.load_workbook(arquivo)
+            ws = wb.active
+            data = ws.values
+            cols = next(data)
+            df = pd.DataFrame(data, columns=cols)
+            df_merged = pd.concat([df_merged, df], ignore_index=True)
+
+        salvar_em = filedialog.asksaveasfilename(defaultextension=".xlsx", filetypes=[("Excel", "*.xlsx")], title="Salvar arquivo mesclado")
+        if salvar_em:
+            df_merged.to_excel(salvar_em, index=False)
+            messagebox.showinfo("Sucesso", f"Arquivos mesclados salvos em:\n{salvar_em}")
+
+    except Exception as e:
+        messagebox.showerror("Erro", f"Ocorreu um erro ao mesclar os arquivos:\n{e}")
+
 def criar_excel():
     global excel_file
     if not excel_file:
