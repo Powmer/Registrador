@@ -4,7 +4,9 @@ import openpyxl
 from openpyxl import Workbook
 from datetime import datetime
 import os
+import pandas as pd
 
+# Variáveis globais
 excel_file = ""
 carrinho = []
 comandas = {}
@@ -12,7 +14,7 @@ comandas = {}
 de1a100 = [i+1 for i in range(101)]
 de50em100 = [50*i for i in range(101)]
 comanda_selecionada = None
-
+ 
 def criar_excel():
     global excel_file
     if not excel_file:
@@ -48,15 +50,7 @@ def calcular_preco(produto, quantidade):
         return round((quantidade / 1000) * 89.99, 2)
     return 0.0
 
-def calcular_gramas_por_valor(event=None):
-    try:
-        valor = valor_em_reais_var.get()
-        if valor > 0:
-            gramas = (valor * 1000) / 89.99
-            quantidade_gramas_var.set(round(gramas))
-    except Exception:
-        pass
-
+# Carrinho de vendas diretas
 def adicionar_ao_carrinho():
     produto = product_type_var.get()
     entrega = delivery_type_var.get()
@@ -118,9 +112,9 @@ def limpar_campos_venda():
     product_type_var.set("")
     quantidade_var.set(0)
     quantidade_gramas_var.set(0)
-    valor_em_reais_var.set(0)
     delivery_type_var.set("")
 
+# Funções das comandas
 def abrir_comanda():
     global comanda_selecionada
     nome = comanda_nome_var.get().strip()
@@ -220,6 +214,7 @@ def limpar_campos_comanda():
     comanda_qtd_var.set(0.0)
     comanda_gramas_var.set(0.0)
 
+# ---------- Interface gráfica ----------
 root = tk.Tk()
 root.title("Sistema de Vendas e Comandas")
 root.option_add("*Font", "Helvetica 10")
@@ -228,14 +223,9 @@ style.theme_use("clam")
 style.configure("Treeview.Heading", font=("Helvetica", 10, "bold"))
 style.configure("TButton", padding=5)
 
+# Frame de Vendas
 frame_venda = ttk.LabelFrame(root, text="Venda")
-frame_venda.grid(row=0, column=0, padx=10, pady=10, sticky="n")
-
-frame_carrinho = ttk.LabelFrame(root, text="Carrinho")
-frame_carrinho.grid(row=0, column=1, padx=10, pady=10, sticky="n")
-
-frame_comanda = ttk.LabelFrame(root, text="Comandas")
-frame_comanda.grid(row=0, column=2, padx=10, pady=10, sticky="n")
+frame_venda.pack(side="left", padx=10, pady=10, fill="both")
 
 ttk.Label(frame_venda, text="Produto").grid(row=0, column=0)
 product_type_var = tk.StringVar()
@@ -248,12 +238,6 @@ ttk.Combobox(frame_venda, textvariable=quantidade_var, values=de1a100).grid(row=
 ttk.Label(frame_venda, text="Qtd (g)").grid(row=2, column=0)
 quantidade_gramas_var = tk.DoubleVar()
 ttk.Combobox(frame_venda, textvariable=quantidade_gramas_var, values=de50em100).grid(row=2, column=1)
-
-ttk.Label(frame_venda, text="Valor R$").grid(row=9, column=0)
-valor_em_reais_var = tk.DoubleVar()
-valor_entry = ttk.Entry(frame_venda, textvariable=valor_em_reais_var)
-valor_entry.grid(row=9, column=1)
-valor_entry.bind("<FocusOut>", calcular_gramas_por_valor)
 
 ttk.Label(frame_venda, text="Entrega").grid(row=3, column=0)
 delivery_type_var = tk.StringVar()
@@ -269,7 +253,11 @@ ttk.Button(frame_venda, text="Finalizar Venda", command=registrar_carrinho).grid
 ttk.Button(frame_venda, text="Selecionar Pasta", command=selecionar_diretorio).grid(row=7, column=0, columnspan=2, pady=5)
 ttk.Button(frame_venda, text="Carregar Arquivo Excel", command=selecionar_arquivo_excel).grid(row=8, column=0, columnspan=2, pady=5)
 
-lista_carrinho = ttk.Treeview(frame_carrinho, columns=("Produto", "Qtd", "Preço", "Entrega"), show="headings", height=10)
+# Frame Carrinho
+frame_carrinho = ttk.LabelFrame(root, text="Carrinho")
+frame_carrinho.pack(side="left", pady=10, fill="both")
+
+lista_carrinho = ttk.Treeview(frame_carrinho, columns=("Produto", "Qtd", "Preço", "Entrega"), show="headings", height=7)
 for col in ("Produto", "Qtd", "Preço", "Entrega"):
     lista_carrinho.heading(col, text=col)
 lista_carrinho.pack(padx=5, pady=5)
@@ -277,6 +265,10 @@ lista_carrinho.pack(padx=5, pady=5)
 ttk.Label(frame_carrinho, text="Total:").pack()
 preco_total_carrinho_var = tk.StringVar(value="R$ 0.0")
 ttk.Label(frame_carrinho, textvariable=preco_total_carrinho_var, font=("Helvetica", 10, "bold")).pack()
+
+# Frame Comandas
+frame_comanda = ttk.LabelFrame(root, text="Comandas")
+frame_comanda.pack(side="right", pady=10, fill="both")
 
 ttk.Label(frame_comanda, text="Nome").grid(row=0, column=0)
 comanda_nome_var = tk.StringVar()
@@ -292,32 +284,7 @@ ttk.Label(frame_comanda, text="Produto").grid(row=3, column=0)
 comanda_produto_var = tk.StringVar()
 ttk.Combobox(frame_comanda, textvariable=comanda_produto_var, values=["Combo Individual", "Combo Família", "Kilo"]).grid(row=3, column=1)
 
-ttk.Label(frame_comanda, text="Qtd Produtos").grid(row=4, column=0)
-comanda_qtd_var = tk.DoubleVar()
-ttk.Entry(frame_comanda, textvariable=comanda_qtd_var).grid(row=4, column=1)
 
-ttk.Label(frame_comanda, text="Qtd (g)").grid(row=5, column=0)
-comanda_gramas_var = tk.DoubleVar()
-ttk.Entry(frame_comanda, textvariable=comanda_gramas_var).grid(row=5, column=1)
+ttk.Button(frame_comanda, text="Gerar Relatorio", command=PowerBi).grid(row=6, column=0, columnspan=2, pady=5)
 
-ttk.Button(frame_comanda, text="Adicionar Item", command=adicionar_item_comanda).grid(row=6, column=0, columnspan=2, pady=5)
-
-ttk.Label(frame_comanda, text="Pagamento").grid(row=7, column=0)
-comanda_pagamento_var = tk.StringVar()
-ttk.Combobox(frame_comanda, textvariable=comanda_pagamento_var, values=["Pix", "Cartão", "Dinheiro"]).grid(row=7, column=1)
-
-ttk.Button(frame_comanda, text="Fechar Comanda", command=fechar_comanda).grid(row=8, column=0, columnspan=2, pady=5)
-
-ttk.Label(frame_comanda, text="Comandas Abertas").grid(row=9, column=0, columnspan=2)
-lista_comandas = tk.Listbox(frame_comanda, height=5)
-lista_comandas.grid(row=10, column=0, columnspan=2, pady=5)
-lista_comandas.bind("<<ListboxSelect>>", selecionar_comanda)
-
-ttk.Label(frame_comanda, text="Itens da Comanda").grid(row=11, column=0, columnspan=2)
-lista_itens = ttk.Treeview(frame_comanda, columns=("Produto", "Qtd", "Preço"), show="headings", height=5)
-for col in ("Produto", "Qtd", "Preço"):
-    lista_itens.heading(col, text=col)
-lista_itens.grid(row=12, column=0, columnspan=2, pady=5)
-
-ttk.Label(frame_comanda, text="Total:").grid(row=13, column=0)
-preco_total_comanda_var = tk.StringVar(value="R$ 0.0")
+root.mainloop()
