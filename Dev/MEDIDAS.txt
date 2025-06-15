@@ -1,0 +1,11 @@
+#-------Comob Familia---------#
+CFC : 600g
+CFA : 800g
+CFM : 
+CFF : 150g - x(peso embalagem remover assim que possivel)
+TOTAL: 
+#-------Combo Individual-------#
+CIC:
+CIA:
+CIM:
+CIF:75 g - x
