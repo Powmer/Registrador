@@ -18,13 +18,6 @@ de50em100 = [50*i for i in range(101)]
 comanda_selecionada = None
 
 ### EXCEL 
-def abrir_merger():
-    caminho_merger = os.path.join(os.path.dirname(__file__), "merger.py")
-    subprocess.Popen([sys.executable, caminho_merger])
-
-def abrir_transfer():
-    caminho_transfer = os.path.join(os.path.dirname(__file__), "Transfer.py")
-    subprocess.Popen([sys.executable, caminho_transfer])
 
 def criar_excel():
     global excel_file
@@ -118,114 +111,24 @@ def registrar_carrinho():
     carrinho.clear()
     atualizar_lista_carrinho()
     atualizar_total_carrinho()
+def excluir_item_carrinho():
+    selecionados = lista_carrinho.selection()
+    if not selecionados:
+        messagebox.showwarning("Aviso", "Selecione um ou mais itens para excluir.")
+        return
 
+    for selecionado in selecionados:
+        index = lista_carrinho.index(selecionado)
+        lista_carrinho.delete(selecionado)
+        del carrinho[index]
+
+    atualizar_total_carrinho()
 def limpar_campos_venda():
     product_type_var.set("")
     quantidade_var.set(0)
     quantidade_gramas_var.set(0)
     delivery_type_var.set("")
 
-# Funções das comandas
-def abrir_comanda():
-    global comanda_selecionada
-    nome = comanda_nome_var.get().strip()
-    tipo_entrega = comanda_delivery_var.get()
-    if not nome or not tipo_entrega:
-        messagebox.showwarning("Atenção", "Informe nome e entrega.")
-        return
-    if nome not in comandas:
-        comandas[nome] = {
-            "itens": [],
-            "entrega": tipo_entrega,
-            "inicio": datetime.now(),
-            "pagamento": ""
-        }
-    comanda_selecionada = nome
-    atualizar_comandas()
-    atualizar_lista_itens()
-    atualizar_total_comanda()
-
-def adicionar_item_comanda():
-    global comanda_selecionada
-    if not comanda_selecionada:
-        messagebox.showwarning("Atenção", "Nenhuma comanda selecionada.")
-        return
-    produto = comanda_produto_var.get()
-    if produto == "Kilo":
-        quantidade = comanda_gramas_var.get()
-    else:
-        quantidade = comanda_qtd_var.get()
-    if not produto or quantidade <= 0:
-        messagebox.showwarning("Atenção", "Informe produto e quantidade.")
-        return
-    preco = calcular_preco(produto, quantidade)
-    comandas[comanda_selecionada]["itens"].append({
-        "produto": produto,
-        "quantidade": quantidade,
-        "preco": preco
-    })
-    atualizar_lista_itens()
-    atualizar_total_comanda()
-    limpar_campos_comanda()
-
-def atualizar_comandas():
-    lista_comandas.delete(0, tk.END)
-    for nome in comandas:
-        lista_comandas.insert(tk.END, nome)
-
-def selecionar_comanda(evt):
-    global comanda_selecionada
-    selecao = lista_comandas.curselection()
-    if selecao:
-        comanda_selecionada = lista_comandas.get(selecao)
-        atualizar_lista_itens()
-        atualizar_total_comanda()
-
-def atualizar_lista_itens():
-    for i in lista_itens.get_children():
-        lista_itens.delete(i)
-    if comanda_selecionada:
-        for item in comandas[comanda_selecionada]["itens"]:
-            lista_itens.insert("", "end", values=(item["produto"], item["quantidade"], f"R$ {item['preco']}"))
-
-def atualizar_total_comanda():
-    if comanda_selecionada:
-        total = sum(item["preco"] for item in comandas[comanda_selecionada]["itens"])
-        preco_total_comanda_var.set(f"R$ {round(total, 2)}")
-    else:
-        preco_total_comanda_var.set("R$ 0.0")
-
-def fechar_comanda():
-    global excel_file
-    if not excel_file:
-        messagebox.showwarning("Atenção", "Selecione ou crie um arquivo Excel antes.")
-        return
-    if not comanda_selecionada:
-        messagebox.showwarning("Atenção", "Nenhuma comanda selecionada.")
-        return
-    pagamento = comanda_pagamento_var.get()
-    if not pagamento:
-        messagebox.showwarning("Atenção", "Informe o pagamento.")
-        return
-    comanda = comandas[comanda_selecionada]
-    data_hora = comanda["inicio"].strftime("%Y-%m-%d %H:%M:%S")
-    wb = openpyxl.load_workbook(excel_file)
-    ws = wb.active
-    for item in comanda["itens"]:
-        ws.append([comanda_selecionada, data_hora, item["produto"], item["quantidade"], item["preco"], comanda["entrega"], pagamento])
-    wb.save(excel_file)
-    messagebox.showinfo("Sucesso", f"Comanda '{comanda_selecionada}' fechada.")
-    del comandas[comanda_selecionada]
-    atualizar_comandas()
-    atualizar_lista_itens()
-    atualizar_total_comanda()
-
-def limpar_campos_comanda():
-    comanda_produto_var.set("")
-    comanda_qtd_var.set(0.0)
-    comanda_gramas_var.set(0.0)
-
-# --- Nova função para mostrar/ocultar campos de quantidade ---
 def atualizar_campos_quantidade(*args):
     produto = product_type_var.get()
     if produto == "Kilo":
@@ -300,20 +203,12 @@ lista_carrinho.pack(padx=5, pady=5)
 ttk.Label(frame_carrinho, text="Total:").pack()
 preco_total_carrinho_var = tk.StringVar(value="R$ 0.0")
 ttk.Label(frame_carrinho, textvariable=preco_total_carrinho_var, font=("Helvetica", 10, "bold")).pack()
+ttk.Button(frame_carrinho, text="Excluir Item(s)", command=excluir_item_carrinho).pack(pady=5)
 
 # Frame Comandas
+
 frame_comanda = ttk.LabelFrame(root, text="Comandas")
 frame_comanda.pack(side="right", pady=10, fill="both")
 
-ttk.Label(frame_comanda, text="Nome").grid(row=0, column=0)
-comanda_nome_var = tk.StringVar()
-ttk.Entry(frame_comanda, textvariable=comanda_nome_var).grid(row=0, column=1)
-
-ttk.Label(frame_comanda, text="Entrega").grid(row=1, column=0)
-comanda_delivery_var = tk.StringVar()
-ttk.Combobox(frame_comanda, textvariable=comanda_delivery_var, values=["Retirada", "Entrega"]).grid(row=1, column=1)
-
-ttk.Button(frame_comanda, text="Merger", command=abrir_merger).grid(row=2, column=0, columnspan=2, pady=5)
-ttk.Button(frame_comanda, text="Transfer", command=abrir_transfer).grid(row=3, column=0, columnspan=2, pady=5)
 
 root.mainloop()
