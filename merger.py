@@ -49,9 +49,9 @@ class ExcelMergerApp:
                 df_merged = pd.concat([df_merged, df], ignore_index=True)
 
             save_path = filedialog.asksaveasfilename(defaultextension=".xlsx", filetypes=[("Excel", "*.xlsx")], title="Salvar arquivo mesclado")
-            if save_path:
-                df_merged.to_excel(save_path, index=False)
-                messagebox.showinfo("Sucesso", f"Arquivo salvo em:\n{save_path}")
+            if salvar_em:
+                df_merged.to_excel(salvar_em, index=False)
+                messagebox.showinfo("Sucesso", f"Arquivo salvo em:\n{salvar_em}")
         except Exception as e:
             messagebox.showerror("Erro", f"Ocorreu um erro ao mesclar os arquivos:\n{e}")
 
