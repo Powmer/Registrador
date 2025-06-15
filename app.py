@@ -5,6 +5,8 @@ from openpyxl import Workbook
 from datetime import datetime
 import os
 import pandas as pd
+import subprocess
+import sys
 
 # Variáveis globais
 excel_file = ""
@@ -14,31 +16,15 @@ comandas = {}
 de1a100 = [i+1 for i in range(101)]
 de50em100 = [50*i for i in range(101)]
 comanda_selecionada = None
+
 ### EXCEL 
-def pymerger():
-    arquivos = filedialog.askopenfilenames(title="Selecione arquivos Excel", filetypes=[("Arquivos Excel", "*.xlsx")])
-    if not arquivos or len(arquivos) < 2:
-        messagebox.showwarning("Aviso", "Selecione pelo menos dois arquivos.")
-        return
+def abrir_merger():
+    caminho_merger = os.path.join(os.path.dirname(__file__), "merger.py")
+    subprocess.Popen([sys.executable, caminho_merger])
 
-    try:
-        df_merged = pd.DataFrame()
-
-        for arquivo in arquivos:
-            wb = openpyxl.load_workbook(arquivo)
-            ws = wb.active
-            data = ws.values
-            cols = next(data)
-            df = pd.DataFrame(data, columns=cols)
-            df_merged = pd.concat([df_merged, df], ignore_index=True)
-
-        salvar_em = filedialog.asksaveasfilename(defaultextension=".xlsx", filetypes=[("Excel", "*.xlsx")], title="Salvar arquivo mesclado")
-        if salvar_em:
-            df_merged.to_excel(salvar_em, index=False)
-            messagebox.showinfo("Sucesso", f"Arquivos mesclados salvos em:\n{salvar_em}")
-
-    except Exception as e:
-        messagebox.showerror("Erro", f"Ocorreu um erro ao mesclar os arquivos:\n{e}")
+def abrir_transfer():
+    caminho_transfer = os.path.join(os.path.dirname(__file__), "Transfer.py")
+    subprocess.Popen([sys.executable, caminho_transfer])
 
 def criar_excel():
     global excel_file
@@ -239,6 +225,20 @@ def limpar_campos_comanda():
     comanda_qtd_var.set(0.0)
     comanda_gramas_var.set(0.0)
 
+# --- Nova função para mostrar/ocultar campos de quantidade ---
+def atualizar_campos_quantidade(*args):
+    produto = product_type_var.get()
+    if produto == "Kilo":
+        quantidade_label.grid_remove()
+        quantidade_entry.grid_remove()
+        quantidade_gramas_label.grid(row=2, column=0)
+        quantidade_gramas_entry.grid(row=2, column=1)
+    else:
+        quantidade_gramas_label.grid_remove()
+        quantidade_gramas_entry.grid_remove()
+        quantidade_label.grid(row=1, column=0)
+        quantidade_entry.grid(row=1, column=1)
+
 # ---------- Interface gráfica ----------
 root = tk.Tk()
 root.title("Sistema de Vendas e Comandas")
@@ -254,15 +254,21 @@ frame_venda.pack(side="left", padx=10, pady=10, fill="both")
 
 ttk.Label(frame_venda, text="Produto").grid(row=0, column=0)
 product_type_var = tk.StringVar()
-ttk.Combobox(frame_venda, textvariable=product_type_var, values=["Combo Individual", "Combo Família", "Kilo"]).grid(row=0, column=1)
+product_combobox = ttk.Combobox(frame_venda, textvariable=product_type_var, values=["Combo Individual", "Combo Família", "Kilo"])
+product_combobox.grid(row=0, column=1)
 
-ttk.Label(frame_venda, text="Qtd Produtos").grid(row=1, column=0)
+quantidade_label = ttk.Label(frame_venda, text="Qtd Produtos")
+quantidade_label.grid(row=1, column=0)
 quantidade_var = tk.DoubleVar()
-ttk.Combobox(frame_venda, textvariable=quantidade_var, values=de1a100).grid(row=1, column=1)
+quantidade_entry = ttk.Combobox(frame_venda, textvariable=quantidade_var, values=de1a100)
+quantidade_entry.grid(row=1, column=1)
 
-ttk.Label(frame_venda, text="Qtd (g)").grid(row=2, column=0)
+quantidade_gramas_label = ttk.Label(frame_venda, text="Qtd (g)")
 quantidade_gramas_var = tk.DoubleVar()
-ttk.Combobox(frame_venda, textvariable=quantidade_gramas_var, values=de50em100).grid(row=2, column=1)
+quantidade_gramas_entry = ttk.Combobox(frame_venda, textvariable=quantidade_gramas_var, values=de50em100)
+# inicialmente escondido
+quantidade_gramas_label.grid_remove()
+quantidade_gramas_entry.grid_remove()
 
 ttk.Label(frame_venda, text="Entrega").grid(row=3, column=0)
 delivery_type_var = tk.StringVar()
@@ -277,6 +283,10 @@ ttk.Combobox(frame_venda, textvariable=payment_method_var, values=["Pix", "Cart�
 ttk.Button(frame_venda, text="Finalizar Venda", command=registrar_carrinho).grid(row=6, column=0, columnspan=2, pady=5)
 ttk.Button(frame_venda, text="Selecionar Pasta", command=selecionar_diretorio).grid(row=7, column=0, columnspan=2, pady=5)
 ttk.Button(frame_venda, text="Carregar Arquivo Excel", command=selecionar_arquivo_excel).grid(row=8, column=0, columnspan=2, pady=5)
+
+# Ativa a função para atualizar campos ao mudar o produto selecionado
+product_type_var.trace_add("write", atualizar_campos_quantidade)
+atualizar_campos_quantidade()  # para iniciar com a visualização correta
 
 # Frame Carrinho
 frame_carrinho = ttk.LabelFrame(root, text="Carrinho")
@@ -303,13 +313,7 @@ ttk.Label(frame_comanda, text="Entrega").grid(row=1, column=0)
 comanda_delivery_var = tk.StringVar()
 ttk.Combobox(frame_comanda, textvariable=comanda_delivery_var, values=["Retirada", "Entrega"]).grid(row=1, column=1)
 
-ttk.Button(frame_comanda, text="Abrir Comanda", command=abrir_comanda).grid(row=2, column=0, columnspan=2, pady=5)
-
-ttk.Label(frame_comanda, text="Produto").grid(row=3, column=0)
-comanda_produto_var = tk.StringVar()
-ttk.Combobox(frame_comanda, textvariable=comanda_produto_var, values=["Combo Individual", "Combo Família", "Kilo"]).grid(row=3, column=1)
-
-
-ttk.Button(frame_comanda, text="Gerar Relatorio", command=PowerBi).grid(row=6, column=0, columnspan=2, pady=5)
+ttk.Button(frame_comanda, text="Merger", command=abrir_merger).grid(row=2, column=0, columnspan=2, pady=5)
+ttk.Button(frame_comanda, text="Transfer", command=abrir_transfer).grid(row=3, column=0, columnspan=2, pady=5)
 
 root.mainloop()
