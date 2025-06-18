@@ -15,7 +15,7 @@ plt.text(0.5, 0.5,
 plt.tight_layout()
 plt.show()
 
-
+7777777777777777
 
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -25,12 +25,52 @@ combo_familia = dataset.loc[dataset['Produto'] == 'Combo Familia', 'Quantidade']
 
 kilo = dataset.loc[dataset['Produto'] == 'Kilo', 'Quantidade'].sum()
 
-#gráfico
+
 produtos = ['Combo Individual', 'Combo Familia', 'Kilo (gramas)']
 valores = [combo_individual, combo_familia, kilo]
 
 plt.figure(figsize=(7,7))
 plt.pie(valores, labels=produtos, autopct='%1.1f%%', startangle=140)
 plt.title('Participação das Vendas por Produto')
-plt.axis('equal')  # círculo perfeito
+plt.axis('equal') 
+plt.show()
+
+df = dataset 
+df['Contagem'] = 1
+produto_total = df.groupby('Produto')['Contagem'].sum()
+produto_entrega = df.groupby(['Produto', 'Entrega'])['Contagem'].sum().reset_index()
+# Preparar dados para as fatias
+outer_labels = []
+outer_sizes = []
+inner_labels = []
+inner_sizes = []
+cores_produto = {
+    'Combo Individual': '#66c2a5',
+    'Combo Família': '#fc8d62',
+    'Kilo': '#ffd92f'
+}
+cores_entrega = {
+    'Entrega': '#8da0cb',
+    'Retirada': '#e78ac3'
+}
+
+for produto, total in produto_total.items():
+    inner_labels.append(produto)
+    inner_sizes.append(total)
+    
+    subdata = produto_entrega[produto_entrega['Produto'] == produto]
+    for _, row in subdata.iterrows():
+        outer_labels.append(f"{row['Entrega']} ({produto})")
+        outer_sizes.append(row['Contagem'])
+
+fig, ax = plt.subplots(figsize=(8, 8))
+# Externa
+ax.pie(outer_sizes, radius=1, labels=outer_labels, colors=[cores_entrega[label.split()[0]] for label in outer_labels],
+       wedgeprops=dict(width=0.3, edgecolor='white'))
+#Grafico Interno
+ax.pie(inner_sizes, radius=0.7, labels=inner_labels, labeldistance=0.5,
+       colors=[cores_produto[label] for label in inner_labels],
+       wedgeprops=dict(width=0.3, edgecolor='white'))
+
+ax.set(aspect="equal", title='Vendas por Produto e Entrega/Retirada')
 plt.show()
