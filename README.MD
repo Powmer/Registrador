@@ -12,3 +12,4 @@ Dados das colunas : Tipo de registro, entrega, preço, produto, quantidade e dat
 pip import openpyxl, subprocess, pandas
 ////////////////////
 PWRBI--
+pip import matplotlib
