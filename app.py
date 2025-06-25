@@ -69,7 +69,7 @@ def salvar_planilha():
 
     wb = openpyxl.load_workbook(excel_file)
     ws = wb.active
-    ws.delete_rows(2, ws.max_row)  # Apaga dados antigos
+    ws.delete_rows(2, ws.max_row)  #Reset
 
     for item_id in tree_planilha.get_children():
         valores = tree_planilha.item(item_id, "values")
@@ -89,7 +89,7 @@ def excluir_linha_planilha():
     for sel in selecionados:
         tree_planilha.delete(sel)
 
-# Para editar célula no Treeview
+
 def on_tree_double_click(event):
     item = tree_planilha.identify_row(event.y)
     column = tree_planilha.identify_column(event.x)
@@ -97,7 +97,7 @@ def on_tree_double_click(event):
         return
 
     col_index = int(column.replace("#","")) - 1
-    if col_index == 1:  # Proibir edição coluna Data e Hora
+    if col_index == 1:  
         return
 
     x, y, width, height = tree_planilha.bbox(item, column)
@@ -110,7 +110,7 @@ def on_tree_double_click(event):
 
     def salvar_edicao(event=None):
         novo_valor = entry_edit.get()
-        # Se for coluna quantidade (index 3), validar número inteiro >=0
+      
         if col_index == 3:
             try:
                 if "." in novo_valor:
@@ -302,7 +302,7 @@ preco_total_carrinho_var = tk.StringVar(value="R$ 0.0")
 ttk.Label(frame_carrinho, textvariable=preco_total_carrinho_var, font=("Helvetica", 10, "bold")).pack()
 ttk.Button(frame_carrinho, text="Excluir Item(s)", command=excluir_item_carrinho).pack(pady=5)
 
-# Frame Planilha Excel carregada e editável
+# Frame Planilha Excel 
 frame_planilha = ttk.LabelFrame(root, text="Planilha Excel")
 frame_planilha.pack(side="right", padx=10, pady=10, fill="both", expand=True)
 
