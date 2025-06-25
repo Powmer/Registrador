@@ -10,16 +10,16 @@ def processar_vendas():
         print("Arquivo de vendas não encontrado.")
         return
 
-    # Lê o Excel
+    # Read
     df = pd.read_excel(excel_file)
 
-    # Agrupa por produto
+
     agrupado = df.groupby("Produto").agg({
         "Quantidade": "sum",
         "Preço": "sum"
     }).reset_index()
 
-    # Exibe gráfico de pizza
+    #Plottt
     plt.figure(figsize=(6, 6))
     plt.pie(agrupado["Quantidade"], labels=agrupado["Produto"], autopct="%1.1f%%", startangle=140)
     plt.title("Participação nas Vendas por Produto")
