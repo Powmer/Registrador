@@ -6,7 +6,7 @@ import os
 class ExcelMergerApp:
     def __init__(self, master):
         self.master = master
-        self.master.title("PyMerger - Unir Arquivos Excel")
+        self.master.title("PyMerger")
 
         self.arquivos = []
 
