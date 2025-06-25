@@ -10,7 +10,7 @@ class ExcelMergerApp:
 
         self.arquivos = []
 
-        # Widgets
+        #Janela
         ttk.Label(master, text="Arquivos Selecionados").pack(pady=5)
 
         self.lista_arquivos = tk.Listbox(master, width=60, height=8)
